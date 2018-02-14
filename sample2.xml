@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<server description="new server">
+
+    <!-- Enable features -->
+    <featureManager>
+        <feature>javaee-7.0</feature>
+    </featureManager>
+
+    <!-- This template enables security. To get the full use of all the capabilities, a keystore and user registry are required. -->
+    
+    <!-- For the keystore, default keys are generated and stored in a keystore. To provide the keystore password, generate an 
+         encoded password using bin/securityUtility encode and add it below in the password attribute of the keyStore element. 
+         Then uncomment the keyStore element. -->
+    <!--
+    <keyStore password=""/> 
+    -->
+    
+    <!--For a user registry configuration, configure your user registry. For example, configure a basic user registry using the
+        basicRegistry element. Specify your own user name below in the name attribute of the user element. For the password, 
+        generate an encoded password using bin/securityUtility encode and add it in the password attribute of the user element. 
+        Then uncomment the user element. -->
+    <basicRegistry id="basic" realm="BasicRealm"> 
+        <user name="admin" password="admin" />  
+    </basicRegistry>
+    
+    <!-- To access this server from a remote client add a host attribute to the following element, e.g. host="*" -->
+    <httpEndpoint id="defaultHttpEndpoint"
+                  httpPort="7180"
+                  httpsPort="7143" />
+                  
+    <!-- Automatically expand WAR files and EAR files -->
+	<!--
+    <applicationManager autoExpand="true"/>
+	-->
+    <include location="${shared.config.dir}/PostgresqlJDBCLibs.xml"/>
+    
+	<jdbcDriver id='PostgresqlJDBC' 
+				javax.sql.XADataSource='org.postgresql.xa.PGXADataSource'
+				javax.sql.ConnectionPoolDataSource='org.postgresql.ds.PGConnectionPoolDataSource'            
+				libraryRef='PostgresqlJDBCLibs'/> 
+
+	<dataSource id='PegaRULES' jdbcDriverRef='PostgresqlJDBC' jndiName='jdbc/PegaRULES'
+            transactional='true' type='javax.sql.ConnectionPoolDataSource'>
+        <properties id='PegaRULES-props' 
+          databaseName='${pegads.database}'
+          user='${pegads.user}'
+          password='${pegads.password}' 
+          portNumber='${pegads.port}'
+          serverName='${pegads.host}'/> 
+	</dataSource>
+	<!--
+	<dataSource id="db2source" jndiName="jdbc/PegaRULES"
+	type="javax.sql.DataSource">
+	<jdbcDriver libraryRef="DB2JCC4Lib"/>
+	<properties.db2.jcc user="CIT718MTUSER" password="Welcome123"
+	databaseName="CIT718MT" fullyMaterializeLobData="true"
+	fullyMaterializeInputStreams="true" progressiveStreaming="2"
+	useJDBC4ColumnNameAndLabelSemantics="2" />
+	</dataSource>	
+		<application id="prweb" name="prweb" location="prweb.war"
+		type="war">
+		<classloader delegation="parentFirst"
+		commonLibraryRef="DB2JCC4Lib" apiTypeVisibility="spec,ibmapi,
+		api"/>
+		</application>
+		<application id="prweb" name="prweb" location="prpc_j2ee14_
+	ws.ear" type="ear">
+	<classloader delegation="parentFirst"
+	commonLibraryRef="DB2T4LibRef" apiTypeVisibility="spec,ibmapi,
+	api"/>
+	</application>
+	-->
+	<application id="prweb" name="prweb"
+		location="prweb.war" type="war">
+		<classloader delegation="parentFirst" 
+			commonLibraryRef="PostgresqlJDBCLibs"
+			apiTypeVisibility="spec,ibmapi,api" />
+	</application>
+	<application id="prsysmgmt" name="prsysmgmt"
+		location="prsysmgmt.war" type="war">
+		<classloader commonLibraryRef="PostgresqlJDBCLibs" />
+		<application-bnd>
+			<security-role name="PegaDiagnosticUser"> 
+				<user name="admin" />
+				<group name="administrators" />
+			</security-role>
+		</application-bnd>
+	</application>
+
+	<application id="prhelp" name="prhelp" 
+		location="prhelp.war" type="war">
+		<classloader commonLibraryRef="PostgresqlJDBCLibs"/>
+	</application>
+
+	<logging traceSpecification="*=audit"/>
+
+	<jndiEntry jndiName="ibm.worklight.admin.jmx.host"
+		value="localhost"/>
+	<jndiEntry jndiName="ibm.worklight.admin.jmx.port"
+		value="7143"/>
+	<jndiEntry
+		jndiName="prconfig/database/databases/PegaRULES/defaultSchema"
+		value="pegarules"/>
+	<jndiEntry
+		jndiName="prconfig/database/databases/PegaDATA/defaultSchema"
+		value="pegadata"/>
+	<jndiURLEntry value="file:///${server.output.dir}/prtemp"
+		jndiName="url/initialization/explicittempdir" id="PegaTempDir" />	
+		
+	<jndiEntry
+		jndiName="url/pega/none"
+		value="${server.output.dir}/prtemp"/>
+		<!--
+		<simple name="java:/url/pega/none" value="C:/Apps/Pega72/prtemp"/>
+		-->
+</server>
