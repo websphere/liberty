@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<server description="new server">
+    <featureManager>
+        <feature>javaee-7.0</feature>
+    </featureManager>
+    <!--
+    <keyStore password=""/> 
+    -->
+    <basicRegistry id="basic" realm="BasicRealm"> 
+        <user name="admin" password="admin" />  
+    </basicRegistry>
+    
+    <httpEndpoint id="defaultHttpEndpoint"
+					host='*' 
+                  	httpPort="7180"
+                  	httpsPort="7143" />
+                  
+	<!--
+    <applicationManager autoExpand="true"/>
+	-->
+    <include location="${shared.config.dir}/PostgresqlJDBCLibs.xml"/>
+    
+	<jdbcDriver id='PostgresqlJDBC' 
+				javax.sql.XADataSource='org.postgresql.xa.PGXADataSource'
+				javax.sql.ConnectionPoolDataSource='org.postgresql.ds.PGConnectionPoolDataSource'            
+				libraryRef='PostgresqlJDBCLibs'/> 
+
+	<dataSource id='PegaRULES' jdbcDriverRef='PostgresqlJDBC' jndiName='jdbc/PegaRULES'
+            transactional='true' type='javax.sql.ConnectionPoolDataSource'>
+        <properties id='PegaRULES-props' 
+          databaseName='${pegads.database}'
+          user='${pegads.user}'
+          password='${pegads.password}' 
+          portNumber='${pegads.port}'
+          serverName='${pegads.host}'/> 
+	</dataSource>
+	<application id="prweb" name="prweb"
+		location="prweb.war" type="war">
+		<classloader delegation="parentFirst" 
+			commonLibraryRef="PostgresqlJDBCLibs"
+			apiTypeVisibility="spec,ibmapi,api" />
+	</application>
+	<application id="prsysmgmt" name="prsysmgmt"
+		location="prsysmgmt.war" type="war">
+		<classloader commonLibraryRef="PostgresqlJDBCLibs" />
+		<application-bnd>
+			<security-role name="PegaDiagnosticUser"> 
+				<user name="admin" />
+				<group name="administrators" />
+			</security-role>
+		</application-bnd>
+	</application>
+
+	<application id="prhelp" name="prhelp" 
+		location="prhelp.war" type="war">
+		<classloader commonLibraryRef="PostgresqlJDBCLibs"/>
+	</application>
+
+	<logging traceSpecification="*=audit"/>
+
+	<jndiEntry jndiName="ibm.worklight.admin.jmx.host"
+		value="localhost"/>
+
+	<jndiEntry jndiName="ibm.worklight.admin.jmx.port"
+		value="7143"/>
+
+	<jndiEntry
+		jndiName="prconfig/database/databases/PegaRULES/defaultSchema"
+		value="pegarules"/>
+
+	<jndiEntry
+		jndiName="prconfig/database/databases/PegaDATA/defaultSchema"
+		value="pegadata"/>
+
+	<jndiURLEntry value="file:///${server.output.dir}/prtemp"
+		jndiName="url/initialization/explicittempdir" id="PegaTempDir" />	
+
+	<jndiEntry
+		jndiName="url/pega/none"
+		value="${server.output.dir}/prtemp"/>
+
+</server>
